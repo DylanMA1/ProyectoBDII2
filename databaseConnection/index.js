@@ -113,6 +113,17 @@ app.post('/comprar-producto', async (req, res) => {
   }
 });
 
+app.get('/productos', async (req, res) => {
+  try {
+    const [productos] = await mysqlPool.query('SELECT id_producto, nombre FROM Productos');
+    
+    res.json(productos);
+  } catch (error) {
+    console.error("Error fetching productos:", error);
+    res.status(500).json({ message: "Error fetching productos", error });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
