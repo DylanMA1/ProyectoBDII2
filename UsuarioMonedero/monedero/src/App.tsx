@@ -98,6 +98,7 @@ function App() {
         borderRadius="md"
         minHeight={400}
         rounded="2xl"
+        textAlign="center"
       >
         <VStack spacing={4}>
           {/* Mostrar el formulario para ingresar la cédula si no hay un cliente cargado */}
