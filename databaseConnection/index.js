@@ -124,6 +124,37 @@ app.get('/productos', async (req, res) => {
   }
 });
 
+app.get("/clientes", async (req, res) => {
+  try {
+    const { rows: clientes } = await pgPool.query(SELECT cedula, nombre FROM clientes);
+    console.log(clientes)
+    res.json(clientes);
+  } catch (error) {
+    console.error("Error fetching clientes:", error);
+    res.status(500).json({ message: "Error fetching clientes", error });
+  }
+});
+
+app.post("/recargar-monedero", async (req, res) => {
+  const { cliente_id, cantidad } = req.body;
+  try {
+      const result = await pgPool.query(
+          'SELECT recargaMonedero($1, $2)',
+          [cliente_id, cantidad]
+      );
+
+      res.json({
+          message: 'Monedero recargado con éxito',
+          cliente_id,
+          cantidad,
+          nuevo_balance: result.rows[0].recargamoneder 
+      });
+  } catch (error) {
+      console.error("Error al recargar el monedero:", error);
+      res.status(500).json({ message: "Error al recargar el monedero", error: error.message });
+  }
+});
+
 // Ruta para registrar un nuevo cliente
 app.post("/register", async (req, res) => {
   const { nombre, email, num_telefono } = req.body;

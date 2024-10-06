@@ -165,7 +165,7 @@ function App() {
 
 export default App;*/
 
-//#####################################################################################
+//#####################################################################################################################
 
 import { useState, useEffect } from "react";
 import { QrReader } from "react-qr-reader";
@@ -188,6 +188,7 @@ import {
   Grid,
   Divider,
   useToast,
+  Select,
 } from "@chakra-ui/react";
 
 interface Producto {
@@ -198,14 +199,22 @@ interface Producto {
   cantidad_disponible: number;
 }
 
+interface Cliente {
+  cedula: number;
+  nombre: string;
+}
+
 function App() {
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<{
     [key: number]: number;
   }>({});
   const [mensaje, setMensaje] = useState("");
   const [qrVisible, setQrVisible] = useState(false);
   const [qrData, setQrData] = useState("");
+  const [clienteId, setClienteId] = useState<number | undefined>(undefined);
+  const [cantidadRecarga, setCantidadRecarga] = useState<number>(0);
   const toast = useToast();
 
   useEffect(() => {
@@ -220,8 +229,71 @@ function App() {
       }
     };
 
+    const fetchClientes = async () => {
+      try {
+        const response = await fetch("http://localhost:3000/clientes");
+        const data = await response.json();
+        console.log(data);
+        setClientes(data);
+      } catch (error) {
+        console.error("Error fetching clientes:", error);
+        setMensaje("Error al cargar clientes.");
+      }
+    };
+
     fetchProductos();
+    fetchClientes();
   }, []);
+
+  const handleRecargarMonedero = async () => {
+    if (clienteId === undefined || cantidadRecarga <= 0) {
+      setMensaje(
+        "Por favor, selecciona un cliente y una cantidad válida para recargar."
+      );
+      return;
+    }
+
+    console.log("Enviando recarga para el cliente ID:", clienteId);
+
+    const data = {
+      cliente_id: clienteId,
+      cantidad: cantidadRecarga,
+    };
+
+    try {
+      const response = await fetch("http://localhost:3000/recargar-monedero", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("Error en la solicitud");
+      }
+
+      const result = await response.json();
+      setMensaje(Recarga exitosa. Nuevo balance: $${result.nuevo_balance}.);
+
+      toast({
+        title: "Recarga exitosa.",
+        description: Nuevo balance: $${result.nuevo_balance}.,
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+
+      setClienteId(undefined);
+      setCantidadRecarga(0);
+    } catch (error) {
+      if (error instanceof Error) {
+        setMensaje(Error en la recarga: ${error.message});
+      } else {
+        setMensaje("Ocurrió un error inesperado");
+      }
+    }
+  };
 
   const handleComprar = async () => {
     if (!qrData) {
@@ -325,12 +397,7 @@ function App() {
       fontWeight="bold"
       padding={1}
     >
-      <GridItem
-        pl="2"
-        area={"header"}
-        padding={4}
-        alignContent="center"
-      >
+      <GridItem pl="2" area={"header"} padding={4} alignContent="center">
         <Heading as="h1" mb={6}>
           Cajero electronico
         </Heading>
@@ -351,6 +418,49 @@ function App() {
               {mensaje}
             </Text>
           )}
+
+          <Card padding={4} maxWidth="50%">
+            <Heading size="md" alignSelf="flex-start">
+              Recarga de Monedero
+            </Heading>
+            <VStack spacing={4} marginY={4}>
+              <FormControl>
+                <Select
+                  placeholder="Seleccionar cliente"
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setClienteId(value);
+                  }}
+                >
+                  {clientes.map((cliente) => {
+                    return (
+                      <option key={cliente.cedula} value={cliente.cedula}>
+                        {cliente.nombre}
+                      </option>
+                    );
+                  })}
+                </Select>
+              </FormControl>
+
+              <FormControl>
+                <NumberInput
+                  min={0}
+                  value={cantidadRecarga}
+                  onChange={(_, value) => setCantidadRecarga(value)}
+                  width="100%"
+                >
+                  <NumberInputField placeholder="Cantidad a recargar" />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+              </FormControl>
+            </VStack>
+            <Button onClick={handleRecargarMonedero} colorScheme="teal" width="50%">
+              Recargar Monedero
+            </Button>
+          </Card>
         </Box>
       </GridItem>
 
