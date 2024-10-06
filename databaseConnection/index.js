@@ -32,8 +32,7 @@ app.get("/search/:key", async (req, res) => {
 });
 
 app.post('/comprar-producto', async (req, res) => {
-  const { id_producto, cantidad, cliente_id } = req.body;
-
+  const { compras, cliente_id } = req.body; // Cambia para recibir una lista de compras
   let mysqlConnection;
 
   try {
@@ -41,22 +40,37 @@ app.post('/comprar-producto', async (req, res) => {
     mysqlConnection = await mysqlPool.getConnection();
     await mysqlConnection.beginTransaction();
 
-    // Obtener el precio y la cantidad disponible del producto en MySQL
-    const [producto] = await mysqlConnection.query(
-      'SELECT precio, cantidad_disponible FROM Productos WHERE id_producto = ?',
-      [id_producto]
-    );
+    // Inicializar variables para el total y balance del cliente
+    let totalCosto = 0;
 
-    if (producto.length === 0) {
-      throw new Error('Producto no encontrado');
-    }
+    // Iterar sobre cada compra
+    for (const { id_producto, cantidad } of compras) {
+      // Obtener el precio y la cantidad disponible del producto en MySQL
+      const [producto] = await mysqlConnection.query(
+        'SELECT precio, cantidad_disponible FROM Productos WHERE id_producto = ?',
+        [id_producto]
+      );
 
-    const precio = producto[0].precio;
-    const cantidad_disponible = producto[0].cantidad_disponible;
+      if (producto.length === 0) {
+        throw new Error(`Producto no encontrado: ${id_producto}`);
+      }
 
-    // Verificar si hay suficiente cantidad disponible
-    if (cantidad > cantidad_disponible) {
-      throw new Error('No hay suficiente cantidad disponible');
+      const precio = producto[0].precio;
+      const cantidad_disponible = producto[0].cantidad_disponible;
+
+      // Verificar si hay suficiente cantidad disponible
+      if (cantidad > cantidad_disponible) {
+        throw new Error(`No hay suficiente cantidad disponible para el producto: ${id_producto}`);
+      }
+
+      // Sumar al total costo
+      totalCosto += precio * cantidad;
+
+      // Actualizar la cantidad disponible del producto en MySQL
+      await mysqlConnection.query(
+        'UPDATE Productos SET cantidad_disponible = cantidad_disponible - ? WHERE id_producto = ?',
+        [cantidad, id_producto]
+      );
     }
 
     // Consultar el balance del cliente en PostgreSQL usando el código QR como cliente_id (varchar)
@@ -72,21 +86,14 @@ app.post('/comprar-producto', async (req, res) => {
     }
 
     // Verificar si el cliente tiene suficiente saldo
-    const total_costo = precio * cantidad;
-    if (balance < total_costo) {
+    if (balance < totalCosto) {
       throw new Error('Saldo insuficiente');
     }
 
     // Actualizar el balance del cliente en PostgreSQL
     await pgPool.query(
       'UPDATE clientes SET balance_monedero = balance_monedero - $1 WHERE codigo_qr = $2',
-      [total_costo, cliente_id]  // Usar el código QR
-    );
-
-    // Actualizar la cantidad disponible del producto en MySQL
-    await mysqlConnection.query(
-      'UPDATE Productos SET cantidad_disponible = cantidad_disponible - ? WHERE id_producto = ?',
-      [cantidad, id_producto]
+      [totalCosto, cliente_id]  // Usar el código QR
     );
 
     // Confirmar transacción en ambos nodos
@@ -95,9 +102,9 @@ app.post('/comprar-producto', async (req, res) => {
 
     res.json({
       message: 'Compra realizada con éxito',
-      total_costo: total_costo,
-      nuevo_balance: balance - total_costo,
-      cantidad_comprada: cantidad,
+      total_costo: totalCosto,
+      nuevo_balance: balance - totalCosto,
+      compras,  // Devuelve las compras realizadas
     });
 
   } catch (error) {
@@ -113,15 +120,53 @@ app.post('/comprar-producto', async (req, res) => {
   }
 });
 
+
 app.get('/productos', async (req, res) => {
   try {
-    const [productos] = await mysqlPool.query('SELECT id_producto, nombre FROM Productos');
+    const [productos] = await mysqlPool.query('SELECT * FROM Productos');
     
     res.json(productos);
   } catch (error) {
     console.error("Error fetching productos:", error);
     res.status(500).json({ message: "Error fetching productos", error });
   }
+});
+
+
+app.post("/register", async (req, res) => {
+  const { nombre, email, num_telefono } = req.body;
+
+  try {
+    // Insertar el nuevo cliente en la tabla clientes
+    const result = await pgPool.query(
+      `INSERT INTO clientes (nombre, email, num_telefono)
+      VALUES ($1, $2, $3)
+      RETURNING *`,
+      [nombre, email, num_telefono]
+    );
+
+    // Devolver los datos del cliente insertado
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error al registrar cliente:", error);
+    res.status(500).json({ message: "Error al registrar cliente", error });
+  }
+});
+
+app.post("/clients", async (res) => {
+
+  try {
+    // Insertar el nuevo cliente en la tabla clientes
+    const result = await pgPool.query(
+      `SELECT cedula, nombre FROM clientes`,
+    );
+
+    // Devolver los datos del cliente insertado
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error al registrar cliente:", error);
+    res.status(500).json({ message: "Error al registrar cliente", error });
+  }
 });
 
 app.listen(port, () => {
