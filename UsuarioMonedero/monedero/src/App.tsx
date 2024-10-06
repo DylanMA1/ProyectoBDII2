@@ -44,7 +44,7 @@ function App() {
     try {
       // Se limpia cualquier error previo antes de realizar la solicitud.
       setError("");
-      
+
       // Realiza la solicitud al servidor para obtener los datos del cliente.
       const response = await fetch(`http://localhost:3000/search/${cedula}`);
 
@@ -63,7 +63,7 @@ function App() {
       // Si el cliente fue encontrado, actualiza el estado con los datos del cliente y oculta el QR.
       if (data.length > 0) {
         setCliente(data[0]);
-        setMostrarQR(false);  // Reinicia la visualización del QR.
+        setMostrarQR(false); // Reinicia la visualización del QR.
       } else {
         // Si no se encuentra el cliente, muestra un mensaje de error.
         setCliente(null);
@@ -78,14 +78,14 @@ function App() {
 
   // Función para alternar entre mostrar y ocultar el código QR.
   const toggleCodigoQR = () => {
-    setMostrarQR(!mostrarQR);  // Cambia el estado entre true y false.
+    setMostrarQR(!mostrarQR); // Cambia el estado entre true y false.
   };
 
   // Función para cerrar la sesión, limpiando el estado del cliente y la cédula ingresada.
   const cerrarSesion = () => {
-    setCliente(null);     // Limpia los datos del cliente.
-    setCedula(null);      // Limpia la cédula ingresada.
-    setMostrarQR(false);  // Oculta el código QR.
+    setCliente(null); // Limpia los datos del cliente.
+    setCedula(null); // Limpia la cédula ingresada.
+    setMostrarQR(false); // Oculta el código QR.
   };
 
   return (
@@ -111,7 +111,7 @@ function App() {
                 onChange={(e) => {
                   const value = e.target.value;
                   const numberValue = value ? parseInt(value, 10) : null;
-                  setCedula(numberValue);  // Actualiza el estado con el valor ingresado.
+                  setCedula(numberValue); // Actualiza el estado con el valor ingresado.
                   console.log(`Cédula actualizada: ${numberValue}`);
                 }}
               />
@@ -143,9 +143,9 @@ function App() {
               <Box minHeight={128}>
                 {mostrarQR && cliente.codigo_qr && (
                   <QRCodeCanvas
-                    value={cliente.codigo_qr}  // Código QR generado a partir del dato del cliente.
-                    size={128}                 // Tamaño del código QR.
-                    includeMargin={true}        // Incluir margen en el QR.
+                    value={cliente.codigo_qr} // Código QR generado a partir del dato del cliente.
+                    size={128} // Tamaño del código QR.
+                    includeMargin={true} // Incluir margen en el QR.
                   />
                 )}
               </Box>
