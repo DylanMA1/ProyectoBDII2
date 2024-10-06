@@ -124,6 +124,27 @@ app.get('/productos', async (req, res) => {
   }
 });
 
+// Ruta para registrar un nuevo cliente
+app.post("/register", async (req, res) => {
+  const { nombre, email, num_telefono } = req.body;
+
+  try {
+    // Insertar el nuevo cliente en la tabla clientes
+    const result = await pgPool.query(
+      `INSERT INTO clientes (nombre, email, num_telefono)
+      VALUES ($1, $2, $3)
+      RETURNING *`,
+      [nombre, email, num_telefono]
+    );
+
+    // Devolver los datos del cliente insertado
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("Error al registrar cliente:", error);
+    res.status(500).json({ message: "Error al registrar cliente", error });
+  }
+});
+
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });

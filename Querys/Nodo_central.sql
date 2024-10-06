@@ -2,6 +2,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Creación de tablas
 
+-- Pasar
 CREATE TABLE clientes (
     cedula SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -102,19 +103,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION generate_unique_qr()
-RETURNS TEXT AS $$
-DECLARE
-    v_uuid UUID;
-    v_qr_code TEXT;
-BEGIN
-    v_uuid := uuid_generate_v4();
-    v_qr_code := CONCAT('QR-', v_uuid);
-    RETURN v_qr_code;
-END;
-$$ LANGUAGE plpgsql;
 
 -- Trigger para generar código QR antes de insertar un cliente
+-- Pasar
 CREATE OR REPLACE FUNCTION generar_qr_cliente()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -130,6 +121,22 @@ BEFORE INSERT ON clientes
 FOR EACH ROW
 EXECUTE FUNCTION generar_qr_cliente();
 
+
+-- Pasar
+CREATE OR REPLACE FUNCTION generate_unique_qr()
+RETURNS TEXT AS $$
+DECLARE
+    v_uuid UUID;
+    v_qr_code TEXT;
+BEGIN
+    v_uuid := uuid_generate_v4();
+    v_qr_code := CONCAT('QR-', v_uuid);
+    RETURN v_qr_code;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
 CREATE FUNCTION crear_codigo_transaccion(
     p_id_cliente INT
 ) RETURNS TEXT AS $$
@@ -141,6 +148,9 @@ BEGIN
     RETURN v_codigo_transaccion;
 END;
 $$ LANGUAGE plpgsql;
+
+
+
 
 CREATE OR REPLACE FUNCTION usar_promocion(
     p_id_cliente INT,
@@ -162,6 +172,7 @@ BEGIN
     VALUES (p_id_promocion, p_id_cliente, p_id_transaccion);
 END;
 $$ LANGUAGE plpgsql;
+
 
 CREATE FUNCTION validar_transaccion(
     p_codigo_transaccion VARCHAR,
