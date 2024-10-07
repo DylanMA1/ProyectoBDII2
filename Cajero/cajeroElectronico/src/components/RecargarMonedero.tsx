@@ -63,7 +63,6 @@ const RecargarMonedero: React.FC<RecargarMonederoProps> = ({
 
       toast({
         title: "Recarga exitosa.",
-        description: `Nuevo balance: $${result.nuevo_balance}.`,
         status: "success",
         duration: 5000,
         isClosable: true,
