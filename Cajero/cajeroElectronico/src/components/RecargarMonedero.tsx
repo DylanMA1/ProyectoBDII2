@@ -82,7 +82,7 @@ const RecargarMonedero: React.FC<RecargarMonederoProps> = ({
   };
 
   return (
-    <Card padding={4} width="100%" mt={4}>
+    <Card padding={4} width="100%" mt={4} bg="gray.800">
       <VStack spacing={4} width="100%">
         <FormControl>
           <Select
@@ -111,7 +111,7 @@ const RecargarMonedero: React.FC<RecargarMonederoProps> = ({
           </NumberInput>
         </FormControl>
 
-        <Button onClick={handleRecargarMonedero} colorScheme="teal">
+        <Button onClick={handleRecargarMonedero} colorScheme="green">
           Recargar Monedero
         </Button>
 

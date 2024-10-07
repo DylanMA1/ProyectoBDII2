@@ -96,7 +96,7 @@ const AgregarProducto: React.FC<AgregarProductoProps> = ({
   };
 
   return (
-    <Card padding={4} width="100%" mt={4}>
+    <Card padding={4} width="100%" mt={4} bg="gray.800">
       <VStack spacing={4} marginY={4} width="100%">
         <Heading size="md" alignSelf="flex-start">
           Agregar Producto
@@ -153,7 +153,7 @@ const AgregarProducto: React.FC<AgregarProductoProps> = ({
           />
         </FormControl>
 
-        <Button onClick={handleAgregarProducto} colorScheme="teal" width="50%">
+        <Button onClick={handleAgregarProducto} colorScheme="green" width="50%">
           Agregar Producto
         </Button>
 

@@ -170,13 +170,12 @@ function App() {
       gridTemplateColumns={"1fr 550px"}
       width="100%"
       h="100vh"
-      gap="1"
       color="blackAlpha.700"
       fontWeight="bold"
       padding={1}
     >
-      <GridItem pl="2" area={"header"} padding={4} alignContent="center">
-        <Heading as="h1" mb={6} color="whiteAlpha.900">
+      <GridItem pl="2" area={"header"} bg= "blue.400" padding={4} alignContent="center" shadow={5}>
+        <Heading as="h1" mb={6} color="black">
           Cajero electrónico
         </Heading>
       </GridItem>
@@ -231,7 +230,7 @@ function App() {
             }}
           >
             {productos.map((producto) => (
-              <Card key={producto.id_producto} p={2} width="100%">
+              <Card key={producto.id_producto} p={2} width="100%" bg="gray.800">
                 <HStack width="100%">
                   <VStack align="start" spacing={1} width="100%" flex="1">
                     <Text fontWeight="bold">{producto.nombre}</Text>
@@ -261,7 +260,6 @@ function App() {
                     </NumberInput>
                   </FormControl>
                 </HStack>
-                <Divider />
               </Card>
             ))}
           </List>
@@ -270,7 +268,7 @@ function App() {
             Total a pagar: ${calcularTotalCompra()}
           </Text>
           <Button
-            colorScheme="teal"
+            colorScheme="orange"
             marginY={4}
             onClick={handleToggleComponents}
           >
