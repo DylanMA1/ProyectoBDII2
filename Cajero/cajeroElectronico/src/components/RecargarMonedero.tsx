@@ -84,6 +84,10 @@ const RecargarMonedero: React.FC<RecargarMonederoProps> = ({
   return (
     <Card padding={4} width="100%" mt={4}>
       <VStack spacing={4} width="100%">
+        {/*<Heading size="md" alignSelf="flex-start">
+          Recargar Monedero
+        </Heading>*/}
+
         <FormControl>
           <Select
             placeholder="Seleccionar cliente"

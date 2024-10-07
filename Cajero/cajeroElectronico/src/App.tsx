@@ -18,6 +18,7 @@ import {
   NumberIncrementStepper,
   NumberDecrementStepper,
   useToast,
+  Center,
 } from "@chakra-ui/react";
 import RecargarMonedero from "./components/RecargarMonedero";
 import AgregarProducto from "./components/AgregarProducto";
@@ -45,6 +46,7 @@ function App() {
   const [mensaje, setMensaje] = useState("");
   const [qrVisible, setQrVisible] = useState(false);
   const [qrData, setQrData] = useState("");
+  const [showComponents, setShowComponents] = useState(true);
   const toast = useToast();
 
   useEffect(() => {
@@ -125,7 +127,6 @@ function App() {
         `Compra exitosa. Total costo: $${result.total_costo}. Nuevo balance: $${result.nuevo_balance}.`
       );
 
-      // Mostrar el toast de éxito
       toast({
         title: "Compra exitosa.",
         description: `Total costo: $${result.total_costo}. Nuevo balance: $${result.nuevo_balance}.`,
@@ -145,6 +146,23 @@ function App() {
     }
   };
 
+  const calcularTotalCompra = () => {
+    return Object.entries(selectedProducts).reduce(
+      (total, [id_producto, cantidad]) => {
+        const producto = productos.find(
+          (p) => p.id_producto === parseInt(id_producto)
+        );
+        return producto ? total + producto.precio * cantidad : total;
+      },
+      0
+    );
+  };
+
+  const handleToggleComponents = () => {
+    setShowComponents((prev) => !prev);
+    setQrVisible((prev) => !prev);
+  };
+
   return (
     <Grid
       templateAreas={`"header header" "nav main"`}
@@ -158,28 +176,37 @@ function App() {
       padding={1}
     >
       <GridItem pl="2" area={"header"} padding={4} alignContent="center">
-        <Heading as="h1" mb={6}>
-          Cajero electronico
+        <Heading as="h1" mb={6} color="whiteAlpha.900">
+          Cajero electrónico
         </Heading>
       </GridItem>
 
-      <GridItem pl="2" bg="green.300" area={"nav"} padding={4}>
+      <GridItem pl="2" bg="whiteAlpha.900" area={"nav"} padding={4}>
         <HStack width="100%" spacing={4} alignItems="stretch">
-          <RecargarMonedero
-            clientes={clientes}
-            onRecargaExitosa={() => console.log("Recarga exitosa")}
-          />
-          <AgregarProducto onProductoAgregado={fetchProductos} />
+          {showComponents && (
+            <>
+              <RecargarMonedero
+                clientes={clientes}
+                onRecargaExitosa={() => console.log("Recarga exitosa")}
+              />
+              <AgregarProducto onProductoAgregado={fetchProductos} />
+            </>
+          )}
         </HStack>
 
         <Box className="App" textAlign="center" p={5} maxWidth={1000}>
           {qrVisible && (
-            <Box mt={5} w="300px" mx="auto">
-              <QrReader
-                onResult={handleScan}
-                constraints={{ facingMode: "environment" }}
-              />
-            </Box>
+            <Center>
+              <VStack>
+                <Heading>Coloque su código QR al frente de la camara</Heading>
+                <Box mt={1} w="500px" mx="auto">
+                  <QrReader
+                    onResult={handleScan}
+                    constraints={{ facingMode: "environment" }}
+                  />
+                </Box>
+              </VStack>
+            </Center>
           )}
 
           {mensaje && (
@@ -190,13 +217,13 @@ function App() {
         </Box>
       </GridItem>
 
-      <GridItem pl="2" bg="pink.300" area={"main"} padding={4}>
+      <GridItem pl="2" bg="whiteAlpha.900" area={"main"} padding={4}>
         <Box padding={2}>
           <Heading marginBottom={2}>Lista de productos</Heading>
           <List
             spacing={2}
             overflow="scroll"
-            maxHeight={430}
+            maxHeight={415}
             marginBottom={4}
             css={{
               "&::-webkit-scrollbar": { display: "none" },
@@ -238,13 +265,16 @@ function App() {
               </Card>
             ))}
           </List>
-
+          <Divider bgColor="black" marginY={3} height={0.5} />
+          <Text fontWeight="bold" fontSize={25}>
+            Total a pagar: ${calcularTotalCompra()}
+          </Text>
           <Button
             colorScheme="teal"
             marginY={4}
-            onClick={() => setQrVisible(!qrVisible)}
+            onClick={handleToggleComponents}
           >
-            {qrVisible ? "Ocultar" : "Mostrar"} QR
+            Realizar Pago
           </Button>
         </Box>
       </GridItem>
