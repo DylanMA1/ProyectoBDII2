@@ -1,195 +1,27 @@
-/*import { useState, useEffect, FormEvent } from "react";
-import { QrReader } from "react-qr-reader";
-import {
-  Box,
-  Button,
-  FormControl,
-  FormLabel,
-  Select,
-  Heading,
-  Text,
-  VStack,
-  Center,
-  Input, // Asegúrate de importar Input
-} from "@chakra-ui/react";
-
-interface Producto {
-  id_producto: number;
-  nombre: string;
-}
-
-function App() {
-  const [producto, setProducto] = useState<Producto | null>(null);
-  const [productos, setProductos] = useState<Producto[]>([]); // Cambia aquí para usar Producto[]
-  const [idProducto, setIdProducto] = useState(""); // ID del producto seleccionado
-  const [cantidad, setCantidad] = useState(""); // Cantidad del producto
-  const [mensaje, setMensaje] = useState(""); // Mensaje para feedback
-  const [qrVisible, setQrVisible] = useState(false); // Control de visibilidad del lector de QR
-  const [qrData, setQrData] = useState(""); // Datos extraídos del QR
-
-  // Efecto para cargar la lista de productos al montar el componente
-  useEffect(() => {
-    const fetchProductos = async () => {
-      try {
-        const response = await fetch("http://localhost:3000/productos");
-        const data = await response.json();
-        setProductos(data); // Asegúrate de que data sea un array de Producto
-      } catch (error) {
-        console.error("Error fetching productos:", error);
-        setMensaje("Error al cargar productos.");
-      }
-    };
-
-    fetchProductos();
-  }, []);
-
-  const handleComprar = async (event: FormEvent) => {
-    event.preventDefault();
-
-    if (!qrData) {
-      setMensaje(
-        "Por favor, escanea el código QR del cliente antes de realizar la compra."
-      );
-      return;
-    }
-
-    const data = {
-      id_producto: parseInt(idProducto), // Convierte el ID del producto a entero
-      cantidad: parseInt(cantidad), // Convierte la cantidad a entero
-      cliente_id: qrData, // ID del cliente obtenido del código QR
-    };
-
-    try {
-      const response = await fetch("http://localhost:3000/comprar-producto", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error("Error en la solicitud");
-      }
-
-      const result = await response.json();
-      setMensaje(
-        `Compra exitosa. Total costo: $${result.total_costo}. Nuevo balance: $${result.nuevo_balance}.`
-      );
-    } catch (error) {
-      if (error instanceof Error) {
-        setMensaje(`Error en la compra: ${error.message}`);
-      } else {
-        setMensaje("Ocurrió un error inesperado");
-      }
-    }
-  };
-
-  const handleScan = (result: any | null) => {
-    if (result?.text) {
-      setQrData(result.text);
-      setQrVisible(false);
-    }
-  };
-
-  return (
-    <Center height="100vh">
-      <Box className="App" textAlign="center" p={5} maxWidth={1000}>
-        <Heading as="h1" mb={6}>
-          Comprar Productos
-        </Heading>
-
-        <VStack as="form" onSubmit={handleComprar} spacing={5}>
-          {/* Campo de selección de productos 
-          <FormControl id="idProducto" isRequired>
-            <FormLabel>Selecciona un Producto</FormLabel>
-            <Select
-              value={idProducto}
-              onChange={(e) => setIdProducto(e.target.value)}
-              placeholder="Selecciona un producto"
-            >
-              {productos.map(
-                (
-                  producto: Producto // Especificar tipo aquí
-                ) => (
-                  <option
-                    key={producto.id_producto}
-                    value={producto.id_producto}
-                  >
-                    {producto.nombre}
-                  </option>
-                )
-              )}
-            </Select>
-          </FormControl>
-
-          {/* Campo de entrada para la cantidad 
-          <FormControl id="cantidad" isRequired>
-            <FormLabel>Cantidad</FormLabel>
-            <Input
-              type="number"
-              value={cantidad}
-              onChange={(e) => setCantidad(e.target.value)}
-            />
-          </FormControl>
-
-          <Button type="submit" colorScheme="blue">
-            Comprar
-          </Button>
-        </VStack>
-
-        <Button mt={5} onClick={() => setQrVisible(true)} colorScheme="teal">
-          Leer QR
-        </Button>
-
-        {qrVisible && (
-          <Box mt={5} w="300px" mx="auto">
-            <QrReader
-              onResult={handleScan}
-              constraints={{ facingMode: "environment" }}
-            />
-          </Box>
-        )}
-
-        {qrData && <Text mt={3}>Datos del QR: {qrData}</Text>}
-
-        {mensaje && (
-          <Text mt={3} color="red.500">
-            {mensaje}
-          </Text>
-        )}
-      </Box>
-    </Center>
-  );
-}
-
-export default App;*/
-
-//#####################################################################################################################
-
 import { useState, useEffect } from "react";
-import { QrReader } from "react-qr-reader";
 import {
   Box,
   Button,
-  FormControl,
   Heading,
   Text,
   VStack,
   HStack,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
   List,
   Card,
   GridItem,
   Grid,
   Divider,
+  FormControl,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
   useToast,
-  Select,
 } from "@chakra-ui/react";
+import RecargarMonedero from "./components/RecargarMonedero";
+import AgregarProducto from "./components/AgregarProducto";
+import { QrReader } from "react-qr-reader";
 
 interface Producto {
   id_producto: number;
@@ -213,85 +45,40 @@ function App() {
   const [mensaje, setMensaje] = useState("");
   const [qrVisible, setQrVisible] = useState(false);
   const [qrData, setQrData] = useState("");
-  const [clienteId, setClienteId] = useState<number | undefined>(undefined);
-  const [cantidadRecarga, setCantidadRecarga] = useState<number>(0);
   const toast = useToast();
 
   useEffect(() => {
-    const fetchProductos = async () => {
-      try {
-        const response = await fetch("http://localhost:3000/productos");
-        const data = await response.json();
-        setProductos(data);
-      } catch (error) {
-        console.error("Error fetching productos:", error);
-        setMensaje("Error al cargar productos.");
-      }
-    };
-
-    const fetchClientes = async () => {
-      try {
-        const response = await fetch("http://localhost:3000/clientes");
-        const data = await response.json();
-        console.log(data);
-        setClientes(data);
-      } catch (error) {
-        console.error("Error fetching clientes:", error);
-        setMensaje("Error al cargar clientes.");
-      }
-    };
-
     fetchProductos();
     fetchClientes();
   }, []);
 
-  const handleRecargarMonedero = async () => {
-    if (clienteId === undefined || cantidadRecarga <= 0) {
-      setMensaje(
-        "Por favor, selecciona un cliente y una cantidad válida para recargar."
-      );
-      return;
-    }
-
-    console.log("Enviando recarga para el cliente ID:", clienteId);
-
-    const data = {
-      cliente_id: clienteId,
-      cantidad: cantidadRecarga,
-    };
-
+  const fetchProductos = async () => {
     try {
-      const response = await fetch("http://localhost:3000/recargar-monedero", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error("Error en la solicitud");
-      }
-
-      const result = await response.json();
-      setMensaje(Recarga exitosa. Nuevo balance: $${result.nuevo_balance}.);
-
-      toast({
-        title: "Recarga exitosa.",
-        description: Nuevo balance: $${result.nuevo_balance}.,
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-      });
-
-      setClienteId(undefined);
-      setCantidadRecarga(0);
+      const response = await fetch("http://localhost:3000/productos");
+      const data = await response.json();
+      setProductos(data);
     } catch (error) {
-      if (error instanceof Error) {
-        setMensaje(Error en la recarga: ${error.message});
-      } else {
-        setMensaje("Ocurrió un error inesperado");
-      }
+      console.error("Error fetching productos:", error);
+      setMensaje("Error al cargar productos.");
+    }
+  };
+
+  const fetchClientes = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/clientes");
+      const data = await response.json();
+      setClientes(data);
+    } catch (error) {
+      console.error("Error fetching clientes:", error);
+      setMensaje("Error al cargar clientes.");
+    }
+  };
+
+  const handleScan = (result: any | null) => {
+    if (result?.text) {
+      setQrData(result.text);
+      setQrVisible(false);
+      handleComprar();
     }
   };
 
@@ -335,13 +122,13 @@ function App() {
 
       const result = await response.json();
       setMensaje(
-        Compra exitosa. Total costo: $${result.total_costo}. Nuevo balance: $${result.nuevo_balance}.
+        `Compra exitosa. Total costo: $${result.total_costo}. Nuevo balance: $${result.nuevo_balance}.`
       );
 
       // Mostrar el toast de éxito
       toast({
         title: "Compra exitosa.",
-        description: Total costo: $${result.total_costo}. Nuevo balance: $${result.nuevo_balance}.,
+        description: `Total costo: $${result.total_costo}. Nuevo balance: $${result.nuevo_balance}.`,
         status: "success",
         duration: 5000,
         isClosable: true,
@@ -351,43 +138,16 @@ function App() {
       setQrData("");
     } catch (error) {
       if (error instanceof Error) {
-        setMensaje(Error en la compra: ${error.message});
+        setMensaje(`Error en la compra: ${error.message}`);
       } else {
         setMensaje("Ocurrió un error inesperado");
       }
     }
   };
 
-  const handleScan = (result: any | null) => {
-    if (result?.text) {
-      setQrData(result.text);
-      setQrVisible(false);
-      handleComprar();
-    }
-  };
-
-  const handleCantidadChange = (id: number, value: number) => {
-    setSelectedProducts((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
-  };
-
-  const calcularTotalCompra = () => {
-    return Object.entries(selectedProducts).reduce(
-      (total, [id_producto, cantidad]) => {
-        const producto = productos.find(
-          (p) => p.id_producto === parseInt(id_producto)
-        );
-        return producto ? total + producto.precio * cantidad : total;
-      },
-      0
-    );
-  };
-
   return (
     <Grid
-      templateAreas={"header header" "nav main"}
+      templateAreas={`"header header" "nav main"`}
       gridTemplateRows={"70px 1fr 30px"}
       gridTemplateColumns={"1fr 550px"}
       width="100%"
@@ -402,7 +162,16 @@ function App() {
           Cajero electronico
         </Heading>
       </GridItem>
-      <GridItem pl="2" bg="green.300" area={"nav"}>
+
+      <GridItem pl="2" bg="green.300" area={"nav"} padding={4}>
+        <HStack width="100%" spacing={4} alignItems="stretch">
+          <RecargarMonedero
+            clientes={clientes}
+            onRecargaExitosa={() => console.log("Recarga exitosa")}
+          />
+          <AgregarProducto onProductoAgregado={fetchProductos} />
+        </HStack>
+
         <Box className="App" textAlign="center" p={5} maxWidth={1000}>
           {qrVisible && (
             <Box mt={5} w="300px" mx="auto">
@@ -418,49 +187,6 @@ function App() {
               {mensaje}
             </Text>
           )}
-
-          <Card padding={4} maxWidth="50%">
-            <Heading size="md" alignSelf="flex-start">
-              Recarga de Monedero
-            </Heading>
-            <VStack spacing={4} marginY={4}>
-              <FormControl>
-                <Select
-                  placeholder="Seleccionar cliente"
-                  onChange={(e) => {
-                    const value = Number(e.target.value);
-                    setClienteId(value);
-                  }}
-                >
-                  {clientes.map((cliente) => {
-                    return (
-                      <option key={cliente.cedula} value={cliente.cedula}>
-                        {cliente.nombre}
-                      </option>
-                    );
-                  })}
-                </Select>
-              </FormControl>
-
-              <FormControl>
-                <NumberInput
-                  min={0}
-                  value={cantidadRecarga}
-                  onChange={(_, value) => setCantidadRecarga(value)}
-                  width="100%"
-                >
-                  <NumberInputField placeholder="Cantidad a recargar" />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </FormControl>
-            </VStack>
-            <Button onClick={handleRecargarMonedero} colorScheme="teal" width="50%">
-              Recargar Monedero
-            </Button>
-          </Card>
         </Box>
       </GridItem>
 
@@ -488,19 +214,17 @@ function App() {
                     </Text>
                     <Text fontWeight="normal">Precio: {producto.precio}</Text>
                   </VStack>
-                  <FormControl
-                    id={cantidad-${producto.id_producto}}
-                    isRequired
-                    flex="0 0 80px"
-                  >
+                  <FormControl isRequired flex="0 0 80px">
                     <NumberInput
                       min={0}
                       value={selectedProducts[producto.id_producto] || 0}
                       max={producto.cantidad_disponible}
                       onChange={(_, value) =>
-                        handleCantidadChange(producto.id_producto, value)
+                        setSelectedProducts((prev) => ({
+                          ...prev,
+                          [producto.id_producto]: value,
+                        }))
                       }
-                      width="100%"
                     >
                       <NumberInputField />
                       <NumberInputStepper>
@@ -510,15 +234,17 @@ function App() {
                     </NumberInput>
                   </FormControl>
                 </HStack>
+                <Divider />
               </Card>
             ))}
           </List>
-          <Divider bgColor="black" marginY={3} height={0.5} />
-          <Text fontWeight="bold" fontSize={25}>
-            Total a pagar: ${calcularTotalCompra()}
-          </Text>
-          <Button onClick={() => setQrVisible(true)} colorScheme="blue" mt={4}>
-            Realizar cobro
+
+          <Button
+            colorScheme="teal"
+            marginY={4}
+            onClick={() => setQrVisible(!qrVisible)}
+          >
+            {qrVisible ? "Ocultar" : "Mostrar"} QR
           </Button>
         </Box>
       </GridItem>
