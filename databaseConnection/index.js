@@ -6,7 +6,7 @@ const app = express();
 const port = 3000;
 
 app.use(cors());
-app.use(express.json());  // Middleware para parsear JSON
+app.use(express.json());
 
 app.get("/search/:key", async (req, res) => {
   const searchKey = req.params.key;
@@ -132,6 +132,21 @@ app.get('/productos', async (req, res) => {
   }
 });
 
+app.post("/agregar-producto", async (req, res) => {
+  const { nombre, descripcion, precio, cantidad, id_nodo } = req.body;
+  console.log("nombre:", nombre, "descripcion: ", descripcion, "precio: ", precio, "cantidad: ", cantidad, "id_nodo", id_nodo)
+  try {
+    const result = await mysqlPool.query(
+      'CALL registrar_producto(?, ?, ?, ?, ?);', 
+      [nombre, descripcion, precio, cantidad, id_nodo]
+    );
+    res.status(200).json({ message: "Producto agregado exitosamente", result });
+  } catch (error) {
+    console.error("Error al agregar producto:", error);
+    res.status(500).json({ message: "Error al agregar producto", error: error.message });
+  }
+});
+
 
 app.post("/register", async (req, res) => {
   const { nombre, email, num_telefono } = req.body;
@@ -153,20 +168,35 @@ app.post("/register", async (req, res) => {
   }
 });
 
-app.post("/clients", async (res) => {
-
+app.get("/clientes", async (req, res) => {
   try {
-    // Insertar el nuevo cliente en la tabla clientes
-    const result = await pgPool.query(
-      `SELECT cedula, nombre FROM clientes`,
-    );
-
-    // Devolver los datos del cliente insertado
-    res.json(result.rows);
+    const { rows: clientes } = await pgPool.query(`SELECT cedula, nombre FROM clientes`);
+    console.log(clientes)
+    res.json(clientes);
   } catch (error) {
-    console.error("Error al registrar cliente:", error);
-    res.status(500).json({ message: "Error al registrar cliente", error });
-  }
+    console.error("Error fetching clientes:", error);
+    res.status(500).json({ message: "Error fetching clientes", error });
+  }
+});
+
+app.post("/recargar-monedero", async (req, res) => {
+  const { cliente_id, cantidad } = req.body;
+  try {
+      const result = await pgPool.query(
+          'SELECT recargaMonedero($1, $2)',
+          [cliente_id, cantidad]
+      );
+
+      res.json({
+          message: 'Monedero recargado con éxito',
+          cliente_id,
+          cantidad,
+          nuevo_balance: result.rows[0].recargamoneder 
+      });
+  } catch (error) {
+      console.error("Error al recargar el monedero:", error);
+      res.status(500).json({ message: "Error al recargar el monedero", error: error.message });
+  }
 });
 
 app.listen(port, () => {

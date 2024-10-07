@@ -1,25 +1,27 @@
 import { useState, useEffect } from "react";
-import { QrReader } from "react-qr-reader";
 import {
   Box,
   Button,
-  FormControl,
   Heading,
   Text,
   VStack,
   HStack,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
   List,
   Card,
   GridItem,
   Grid,
   Divider,
+  FormControl,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
   useToast,
 } from "@chakra-ui/react";
+import RecargarMonedero from "./components/RecargarMonedero";
+import AgregarProducto from "./components/AgregarProducto";
+import { QrReader } from "react-qr-reader";
 
 interface Producto {
   id_producto: number;
@@ -29,8 +31,14 @@ interface Producto {
   cantidad_disponible: number;
 }
 
+interface Cliente {
+  cedula: number;
+  nombre: string;
+}
+
 function App() {
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<{
     [key: number]: number;
   }>({});
@@ -40,19 +48,39 @@ function App() {
   const toast = useToast();
 
   useEffect(() => {
-    const fetchProductos = async () => {
-      try {
-        const response = await fetch("http://localhost:3000/productos");
-        const data = await response.json();
-        setProductos(data);
-      } catch (error) {
-        console.error("Error fetching productos:", error);
-        setMensaje("Error al cargar productos.");
-      }
-    };
-
     fetchProductos();
+    fetchClientes();
   }, []);
+
+  const fetchProductos = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/productos");
+      const data = await response.json();
+      setProductos(data);
+    } catch (error) {
+      console.error("Error fetching productos:", error);
+      setMensaje("Error al cargar productos.");
+    }
+  };
+
+  const fetchClientes = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/clientes");
+      const data = await response.json();
+      setClientes(data);
+    } catch (error) {
+      console.error("Error fetching clientes:", error);
+      setMensaje("Error al cargar clientes.");
+    }
+  };
+
+  const handleScan = (result: any | null) => {
+    if (result?.text) {
+      setQrData(result.text);
+      setQrVisible(false);
+      handleComprar();
+    }
+  };
 
   const handleComprar = async () => {
     if (!qrData) {
@@ -117,33 +145,6 @@ function App() {
     }
   };
 
-  const handleScan = (result: any | null) => {
-    if (result?.text) {
-      setQrData(result.text);
-      setQrVisible(false);
-      handleComprar();
-    }
-  };
-
-  const handleCantidadChange = (id: number, value: number) => {
-    setSelectedProducts((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
-  };
-
-  const calcularTotalCompra = () => {
-    return Object.entries(selectedProducts).reduce(
-      (total, [id_producto, cantidad]) => {
-        const producto = productos.find(
-          (p) => p.id_producto === parseInt(id_producto)
-        );
-        return producto ? total + producto.precio * cantidad : total;
-      },
-      0
-    );
-  };
-
   return (
     <Grid
       templateAreas={`"header header" "nav main"`}
@@ -156,17 +157,21 @@ function App() {
       fontWeight="bold"
       padding={1}
     >
-      <GridItem
-        pl="2"
-        area={"header"}
-        padding={4}
-        alignContent="center"
-      >
+      <GridItem pl="2" area={"header"} padding={4} alignContent="center">
         <Heading as="h1" mb={6}>
           Cajero electronico
         </Heading>
       </GridItem>
-      <GridItem pl="2" bg="green.300" area={"nav"}>
+
+      <GridItem pl="2" bg="green.300" area={"nav"} padding={4}>
+        <HStack width="100%" spacing={4} alignItems="stretch">
+          <RecargarMonedero
+            clientes={clientes}
+            onRecargaExitosa={() => console.log("Recarga exitosa")}
+          />
+          <AgregarProducto onProductoAgregado={fetchProductos} />
+        </HStack>
+
         <Box className="App" textAlign="center" p={5} maxWidth={1000}>
           {qrVisible && (
             <Box mt={5} w="300px" mx="auto">
@@ -209,19 +214,17 @@ function App() {
                     </Text>
                     <Text fontWeight="normal">Precio: {producto.precio}</Text>
                   </VStack>
-                  <FormControl
-                    id={`cantidad-${producto.id_producto}`}
-                    isRequired
-                    flex="0 0 80px"
-                  >
+                  <FormControl isRequired flex="0 0 80px">
                     <NumberInput
                       min={0}
                       value={selectedProducts[producto.id_producto] || 0}
                       max={producto.cantidad_disponible}
                       onChange={(_, value) =>
-                        handleCantidadChange(producto.id_producto, value)
+                        setSelectedProducts((prev) => ({
+                          ...prev,
+                          [producto.id_producto]: value,
+                        }))
                       }
-                      width="100%"
                     >
                       <NumberInputField />
                       <NumberInputStepper>
@@ -231,15 +234,17 @@ function App() {
                     </NumberInput>
                   </FormControl>
                 </HStack>
+                <Divider />
               </Card>
             ))}
           </List>
-          <Divider bgColor="black" marginY={3} height={0.5} />
-          <Text fontWeight="bold" fontSize={25}>
-            Total a pagar: ${calcularTotalCompra()}
-          </Text>
-          <Button onClick={() => setQrVisible(true)} colorScheme="blue" mt={4}>
-            Realizar cobro
+
+          <Button
+            colorScheme="teal"
+            marginY={4}
+            onClick={() => setQrVisible(!qrVisible)}
+          >
+            {qrVisible ? "Ocultar" : "Mostrar"} QR
           </Button>
         </Box>
       </GridItem>
