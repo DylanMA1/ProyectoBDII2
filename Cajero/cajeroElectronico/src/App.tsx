@@ -186,7 +186,6 @@ function App() {
             <>
               <RecargarMonedero
                 clientes={clientes}
-                onRecargaExitosa={() => console.log("Recarga exitosa")}
               />
               <AgregarProducto onProductoAgregado={fetchProductos} />
             </>

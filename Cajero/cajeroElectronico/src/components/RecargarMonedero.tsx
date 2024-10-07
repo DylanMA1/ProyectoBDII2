@@ -20,13 +20,9 @@ interface Cliente {
 
 interface RecargarMonederoProps {
   clientes: Cliente[];
-  onRecargaExitosa: () => void; // Callback para manejar una recarga exitosa
 }
 
-const RecargarMonedero: React.FC<RecargarMonederoProps> = ({
-  clientes,
-  onRecargaExitosa,
-}) => {
+const RecargarMonedero: React.FC<RecargarMonederoProps> = ({ clientes }) => {
   const [clienteId, setClienteId] = useState<number | undefined>(undefined);
   const [cantidadRecarga, setCantidadRecarga] = useState<number>(0);
   const [mensaje, setMensaje] = useState<string>("");
@@ -58,9 +54,6 @@ const RecargarMonedero: React.FC<RecargarMonederoProps> = ({
         throw new Error("Error en la solicitud");
       }
 
-      const result = await response.json();
-      setMensaje(`Recarga exitosa. Nuevo balance: $${result.nuevo_balance}.`);
-
       toast({
         title: "Recarga exitosa.",
         status: "success",
@@ -70,7 +63,6 @@ const RecargarMonedero: React.FC<RecargarMonederoProps> = ({
 
       setClienteId(undefined);
       setCantidadRecarga(0);
-      onRecargaExitosa(); 
     } catch (error) {
       setMensaje(
         error instanceof Error
