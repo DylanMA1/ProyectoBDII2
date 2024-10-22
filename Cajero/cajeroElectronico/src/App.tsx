@@ -19,6 +19,7 @@ import {
   NumberDecrementStepper,
   useToast,
   Center,
+  ListItem,
 } from "@chakra-ui/react";
 import RecargarMonedero from "./components/RecargarMonedero";
 import AgregarProducto from "./components/AgregarProducto";
@@ -48,6 +49,8 @@ function App() {
   const [qrData, setQrData] = useState("");
   const [showComponents, setShowComponents] = useState(true);
   const toast = useToast();
+  const [historialVentas, setHistorialVentas] = useState<any[]>([]);
+  const [mostrarHistorial, setMostrarHistorial] = useState(false);
 
   useEffect(() => {
     fetchProductos();
@@ -134,6 +137,23 @@ function App() {
         duration: 5000,
         isClosable: true,
       });
+
+      // Actualizar el historial de ventas con la compra actual
+      const nuevaVenta = {
+        id_venta: historialVentas.length + 1, // Generar un ID ficticio para el historial
+        cliente_id: qrData,
+        total: result.total_costo,
+        detalles: compras.map((compra: any) => ({
+          id_producto: compra.id_producto,
+          cantidad: compra.cantidad,
+          precio_unitario: productos.find(
+            (producto) => producto.id_producto === compra.id_producto
+          )?.precio,
+        })),
+        fecha: new Date().toISOString(), // Agregar la fecha actual
+      };
+
+      setHistorialVentas([...historialVentas, nuevaVenta]);
 
       setSelectedProducts({});
       setQrData("");
@@ -276,6 +296,40 @@ function App() {
           >
             Realizar Pago
           </Button>
+          <Button
+            colorScheme="blue"
+            marginY={4}
+            onClick={() => setMostrarHistorial((prev) => !prev)}
+          >
+            Ver Historial de Ventas
+          </Button>
+
+          {mostrarHistorial && (
+            <Box mt={4}>
+              <Heading size="md">Historial de Ventas</Heading>
+              <List spacing={2} mt={4}>
+                {historialVentas.map((venta, index) => (
+                  <Card key={index} p={2} width="100%">
+                    <Text><strong>ID Venta:</strong> {venta.id_venta}</Text>
+                    <Text><strong>Fecha:</strong> {new Date(venta.fecha).toLocaleString()}</Text>
+                    <Text><strong>Cliente ID:</strong> {venta.cliente_id}</Text>
+                    <Text><strong>Total:</strong> ${venta.total}</Text>
+
+                    <Text mt={2}><strong>Productos:</strong></Text>
+                    <List pl={4}>
+                      {venta.detalles.map((detalle: any, idx: number) => (
+                        <ListItem key={idx}>
+                          <Text><strong>ID Producto:</strong> {detalle.id_producto}</Text>
+                          <Text><strong>Cantidad:</strong> {detalle.cantidad}</Text>
+                          <Text><strong>Precio Unitario:</strong> ${detalle.precio_unitario}</Text>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Card>
+                ))}
+              </List>
+            </Box>
+          )}
         </Box>
       </GridItem>
     </Grid>
@@ -283,3 +337,4 @@ function App() {
 }
 
 export default App;
+
