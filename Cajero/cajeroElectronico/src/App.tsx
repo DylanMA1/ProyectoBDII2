@@ -52,7 +52,7 @@ function App() {
   const [historialVentas, setHistorialVentas] = useState<any[]>([]);
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
 
-  useEffect(() => {
+useEffect(() => {
     fetchProductos();
     fetchClientes();
   }, []);
@@ -79,7 +79,7 @@ function App() {
     }
   };
 
-  const handleScan = (result: any | null) => {
+const handleScan = (result: any | null) => {
     if (result?.text) {
       setQrData(result.text);
       setQrVisible(false);
@@ -102,7 +102,7 @@ function App() {
         cantidad,
       }));
 
-    if (compras.length === 0) {
+if (compras.length === 0) {
       setMensaje("Por favor, selecciona al menos un producto para comprar.");
       return;
     }
@@ -130,7 +130,7 @@ function App() {
         `Compra exitosa. Total costo: $${result.total_costo}. Nuevo balance: $${result.nuevo_balance}.`
       );
 
-      toast({
+toast({
         title: "Compra exitosa.",
         description: `Total costo: $${result.total_costo}. Nuevo balance: $${result.nuevo_balance}.`,
         status: "success",
@@ -155,7 +155,7 @@ function App() {
 
       setHistorialVentas([...historialVentas, nuevaVenta]);
 
-      setSelectedProducts({});
+setSelectedProducts({});
       setQrData("");
     } catch (error) {
       if (error instanceof Error) {
@@ -178,7 +178,7 @@ function App() {
     );
   };
 
-  const handleToggleComponents = () => {
+const handleToggleComponents = () => {
     setShowComponents((prev) => !prev);
     setQrVisible((prev) => !prev);
   };
@@ -204,7 +204,7 @@ function App() {
       <GridItem pl="2" bg="whiteAlpha.900" area={"nav"} padding={4}>
         <HStack width="100%" spacing={4} alignItems="stretch">
           {showComponents && (
-            <>
+<>
               <RecargarMonedero
                 clientes={clientes}
                 onRecargaExitosa={() => console.log("Recarga exitosa")}
@@ -229,7 +229,7 @@ function App() {
             </Center>
           )}
 
-          {mensaje && (
+{mensaje && (
             <Text mt={3} color="red.500">
               {mensaje}
             </Text>
@@ -255,7 +255,7 @@ function App() {
                 <HStack width="100%">
                   <VStack align="start" spacing={1} width="100%" flex="1">
                     <Text fontWeight="bold">{producto.nombre}</Text>
-                    <Text fontWeight="normal">{producto.descripcion}</Text>
+		    <Text fontWeight="normal">{producto.descripcion}</Text>
                     <Text fontWeight="normal">
                       Cantidad disponible: {producto.cantidad_disponible}
                     </Text>
@@ -280,7 +280,7 @@ function App() {
                       </NumberInputStepper>
                     </NumberInput>
                   </FormControl>
-                </HStack>
+	</HStack>
                 <Divider />
               </Card>
             ))}
@@ -303,8 +303,7 @@ function App() {
           >
             Ver Historial de Ventas
           </Button>
-
-          {mostrarHistorial && (
+{mostrarHistorial && (
             <Box mt={4}>
               <Heading size="md">Historial de Ventas</Heading>
               <List spacing={2} mt={4}>
@@ -330,11 +329,10 @@ function App() {
               </List>
             </Box>
           )}
-        </Box>
+</Box>
       </GridItem>
     </Grid>
   );
 }
 
 export default App;
-
